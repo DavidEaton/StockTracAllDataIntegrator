@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34322.80
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StockTracAllDataIntegrator", "StockTracAllDataIntegrator\StockTracAllDataIntegrator.csproj", "{97CEDB27-D448-4B54-BB56-E6B583D67C42}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{97CEDB27-D448-4B54-BB56-E6B583D67C42}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{97CEDB27-D448-4B54-BB56-E6B583D67C42}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{97CEDB27-D448-4B54-BB56-E6B583D67C42}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{97CEDB27-D448-4B54-BB56-E6B583D67C42}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {16C58D12-9D71-4973-9AB1-EF92FC2F1225}
+	EndGlobalSection
+EndGlobal
