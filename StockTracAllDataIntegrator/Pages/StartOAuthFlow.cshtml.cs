@@ -8,16 +8,17 @@ namespace StockTracAllDataIntegrator.Pages
     {
         private readonly string clientId;
         private readonly string redirectUri;
+        private readonly string authorizationEndpoint;
 
         public StartOAuthFlowModel(IConfiguration configuration)
         {
             clientId = configuration["OAuth:ClientId"];
             redirectUri = configuration["OAuth:RedirectUri"];
+            authorizationEndpoint = configuration["OAuth:AuthorizationEndpoint"];
         }
 
         public IActionResult OnGet()
         {
-            var authorizationEndpoint = $"https://my.alldata.com/#/authorization";
             var url = $"{authorizationEndpoint}?client_id={clientId}&scope=read&response_type=code&redirect_uri={Uri.EscapeDataString(redirectUri)}";
             return Redirect(url);
         }

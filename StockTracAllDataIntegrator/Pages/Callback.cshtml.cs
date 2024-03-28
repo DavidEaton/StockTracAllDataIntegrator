@@ -8,6 +8,7 @@ namespace StockTracAllDataIntegrator.Pages
     {
         private readonly ITokenService tokenService;
         private readonly IConfiguration configuration;
+        public string AccessToken { get; set; }
 
         public CallbackModel(ITokenService tokenService, IConfiguration configuration)
         {
@@ -20,7 +21,7 @@ namespace StockTracAllDataIntegrator.Pages
             var redirectUri = configuration["OAuth:RedirectUri"];
 
             // Exchange code for token
-            var accessToken = await tokenService.ExchangeAuthorizationCodeForToken(code, redirectUri);
+            AccessToken = await tokenService.ExchangeAuthorizationCodeForToken(code, redirectUri);
 
             // Pass the token back to the C++ application
             // Here you need to implement the logic to pass the access token back to the C++ app.
