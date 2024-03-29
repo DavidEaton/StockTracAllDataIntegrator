@@ -31,6 +31,7 @@ namespace StockTracAllDataIntegrator.Services
                     ["grant_type"] = "authorization_code",
                     ["code"] = authorizationCode,
                     ["redirect_uri"] = redirectUri,
+                    ["client_id"] = _clientId,
                     ["scope"] = "read"
                 }),
                 Headers =

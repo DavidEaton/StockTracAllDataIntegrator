@@ -1,4 +1,7 @@
 using Serilog;
+using Serilog.Events;
+using Serilog.Formatting.Json;
+using Serilog.Sinks.SystemConsole.Themes;
 using StockTracAllDataIntegrator.Services;
 
 namespace StockTracAllDataIntegrator
@@ -7,37 +10,28 @@ namespace StockTracAllDataIntegrator
     {
         public static void Main(string[] args)
         {
-            var logFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs", "StockTracAllDataIntegrator-.txt");
+            var logFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\..\Logs\StockTracAllDataIntegrator-log-.json");
 
-            // Ensure the Logs directory exists
-            var logDirectory = Path.GetDirectoryName(logFilePath);
-            if (!Directory.Exists(logDirectory))
-            {
-                Directory.CreateDirectory(logDirectory);
-            }
-
-            // Configure Serilog first
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Debug()
-                .WriteTo.Console()
-                .WriteTo.File(logFilePath,
-                              rollingInterval: RollingInterval.Day,
-                              outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
+                .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+                .MinimumLevel.Override("Microsoft.Hosting.Lifetime", LogEventLevel.Information)
+                .MinimumLevel.Override("System", LogEventLevel.Warning)
+                .MinimumLevel.Override("Microsoft.AspNetCore.Authentication", LogEventLevel.Information)
+                .Enrich.FromLogContext()
+                .WriteTo.File(new JsonFormatter(), logFilePath, rollingInterval: RollingInterval.Day)
+                .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}{NewLine}", theme: AnsiConsoleTheme.Code)
                 .CreateLogger();
 
-            Log.Information($"Application Base Directory: {AppDomain.CurrentDomain.BaseDirectory}");
-            Log.Information($"Logging to: {logFilePath}");
+            Log.Information($"Application log File Path: {logFilePath}");
 
-
-            // Log.Logger should be set before creating the builder so that we can log from there
             try
             {
                 Log.Information("Starting web host");
 
                 var builder = WebApplication.CreateBuilder(args);
 
-                // Add services to the container with the new Logger
-                builder.Host.UseSerilog(); // This will use the Serilog settings you've configured above
+                builder.Host.UseSerilog();
 
                 // Add services to the container.
                 builder.Services.AddRazorPages();
@@ -73,7 +67,8 @@ namespace StockTracAllDataIntegrator
             }
             finally
             {
-                Log.CloseAndFlush(); // Ensure to flush and stop logging on shutdown
+                // Ensure to flush and stop logging on shutdown
+                Log.CloseAndFlush();
             }
         }
     }
