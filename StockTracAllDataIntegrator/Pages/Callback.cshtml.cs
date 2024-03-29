@@ -8,6 +8,7 @@ namespace StockTracAllDataIntegrator.Pages
     {
         private readonly ITokenService tokenService;
         private readonly IConfiguration configuration;
+        public bool TokenExchangeSuccess { get; private set; }
         public string AccessToken { get; set; }
 
         public CallbackModel(ITokenService tokenService, IConfiguration configuration)
@@ -16,18 +17,42 @@ namespace StockTracAllDataIntegrator.Pages
             this.configuration = configuration;
         }
 
-        public async Task<IActionResult> OnGet(string code, string state)
+        public async Task<IActionResult> OnGetAsync(string code, string state)
         {
-            var redirectUri = configuration["OAuth:RedirectUri"];
+            if (!string.IsNullOrEmpty(code))
+            {
+                try
+                {
+                    var redirectUri = configuration["OAuth:RedirectUri"];
+                    AccessToken = await tokenService.ExchangeAuthorizationCodeForToken(code, redirectUri) ?? "No Token Found";
+                    TokenExchangeSuccess = true;
 
-            // Exchange code for token
-            AccessToken = await tokenService.ExchangeAuthorizationCodeForToken(code, redirectUri);
+                    // Instead of returning a page, you could also redirect to a different page
+                    // or even back to the C++ app if it's listening for a custom URI scheme or on a local HTTP server
+                    // e.g., return Redirect("customapp://token/" + AccessToken);
+                }
+                catch (Exception ex)
+                {
+                    // Log the exception
+                    TokenExchangeSuccess = false;
+                    // Handle the error, possibly return an error page or log the details
+                }
+            }
+            else
+            {
+                // Log the error, the code parameter is missing from the query string
+                TokenExchangeSuccess = false;
+                // Handle the error
+            }
 
-            // Pass the token back to the C++ application
-            // Here you need to implement the logic to pass the access token back to the C++ app.
-            // This could be done by setting the token in a location the C++ app can access it, like a database or cache.
-
-            return Page();
+            if (TokenExchangeSuccess)
+            {
+                return RedirectToPage("/TokenDisplay", new { AccessToken });
+            }
+            else
+            {
+                return RedirectToPage("/Error");
+            }
         }
 
     }

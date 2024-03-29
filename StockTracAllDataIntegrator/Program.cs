@@ -6,14 +6,28 @@ namespace StockTracAllDataIntegrator
     public class Program
     {
         public static void Main(string[] args)
-        {            // Configure Serilog first
+        {
+            var logFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs", "StockTracAllDataIntegrator-.txt");
+
+            // Ensure the Logs directory exists
+            var logDirectory = Path.GetDirectoryName(logFilePath);
+            if (!Directory.Exists(logDirectory))
+            {
+                Directory.CreateDirectory(logDirectory);
+            }
+
+            // Configure Serilog first
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Debug()
                 .WriteTo.Console()
-                .WriteTo.File(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs/StockTracAllDataIntegrator-.txt"),
+                .WriteTo.File(logFilePath,
                               rollingInterval: RollingInterval.Day,
                               outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
                 .CreateLogger();
+
+            Log.Information($"Application Base Directory: {AppDomain.CurrentDomain.BaseDirectory}");
+            Log.Information($"Logging to: {logFilePath}");
+
 
             // Log.Logger should be set before creating the builder so that we can log from there
             try
@@ -47,6 +61,9 @@ namespace StockTracAllDataIntegrator
                 app.UseAuthorization();
 
                 app.MapRazorPages();
+
+                // Change the default route
+                app.MapGet("/", () => Results.Redirect("/StartOAuthFlow"));
 
                 app.Run();
             }

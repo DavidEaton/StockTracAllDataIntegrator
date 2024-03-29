@@ -1,5 +1,5 @@
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Serilog;
 
 namespace StockTracAllDataIntegrator.Pages
 {
@@ -10,6 +10,8 @@ namespace StockTracAllDataIntegrator.Pages
         public IndexModel(ILogger<IndexModel> logger)
         {
             _logger = logger;
+            Log.Information($"Application Base Directory: {AppDomain.CurrentDomain.BaseDirectory}");
+            _logger.LogDebug($"Application Base Directory: {AppDomain.CurrentDomain.BaseDirectory}");
         }
 
         public void OnGet()

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Serilog;
 
 namespace StockTracAllDataIntegrator.Pages
 {
@@ -19,6 +20,8 @@ namespace StockTracAllDataIntegrator.Pages
 
         public IActionResult OnGet()
         {
+            Log.Information($"Application Base Directory: {AppDomain.CurrentDomain.BaseDirectory}");
+
             var url = $"{authorizationEndpoint}?client_id={clientId}&scope=read&response_type=code&redirect_uri={Uri.EscapeDataString(redirectUri)}";
             return Redirect(url);
         }

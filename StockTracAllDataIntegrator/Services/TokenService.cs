@@ -1,4 +1,6 @@
-﻿using System.Text.Json;
+﻿using System.Net;
+using System.Text;
+using System.Text.Json;
 
 namespace StockTracAllDataIntegrator.Services
 {
@@ -8,6 +10,7 @@ namespace StockTracAllDataIntegrator.Services
         private readonly HttpClient _httpClient;
         private readonly string _clientId;
         private readonly string _clientSecret;
+        private readonly string _obtainTokenEndpoint;
 
         public TokenService(HttpClient httpClient, IConfiguration configuration, ILogger<TokenService> logger)
         {
@@ -15,35 +18,49 @@ namespace StockTracAllDataIntegrator.Services
             _httpClient = httpClient;
             _clientId = configuration["OAuth:ClientId"];
             _clientSecret = configuration["OAuth:ClientSecret"];
+            _obtainTokenEndpoint = configuration["OAuth:ObtainTokenEndpoint"];
         }
 
         public async Task<string> ExchangeAuthorizationCodeForToken(string authorizationCode, string redirectUri)
         {
-            var requestContent = new FormUrlEncodedContent(new Dictionary<string, string>
+            var clientCredentials = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{_clientId}:{_clientSecret}"));
+            using var requestMessage = new HttpRequestMessage(HttpMethod.Post, _obtainTokenEndpoint)
             {
-                ["grant_type"] = "authorization_code",
-                ["code"] = authorizationCode,
-                ["redirect_uri"] = redirectUri,
-                ["client_id"] = _clientId,
-                ["client_secret"] = _clientSecret
-            });
+                Content = new FormUrlEncodedContent(new Dictionary<string, string>
+                {
+                    ["grant_type"] = "authorization_code",
+                    ["code"] = authorizationCode,
+                    ["redirect_uri"] = redirectUri,
+                    ["scope"] = "read"
+                }),
+                Headers =
+                {
+                    { HttpRequestHeader.Authorization.ToString(), $"Basic {clientCredentials}" }
+                }
+            };
 
-            var response = await _httpClient.PostAsync("https://api.alldata.com/ADAG/oauth/token", requestContent);
+            var response = await _httpClient.SendAsync(requestMessage);
+            var responseContent = await response.Content.ReadAsStringAsync();
+
+            _logger.LogInformation($"Response Status Code: {response.StatusCode}");
+            _logger.LogInformation($"Response Content: {responseContent}");
 
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogError($"Failed to exchange authorization code for token. Status: {response.StatusCode}");
-                throw new ApplicationException($"Failed to exchange authorization code for token. Status: {response.StatusCode}");
+                return null;
+                //throw new ApplicationException($"Failed to exchange authorization code for token. Status: {response.StatusCode}");
             }
 
-            var responseContent = await response.Content.ReadAsStringAsync();
             var tokenResponse = JsonSerializer.Deserialize<TokenResponse>(responseContent);
             if (tokenResponse?.AccessToken == null)
             {
                 _logger.LogError("No access token in the response.");
-                throw new InvalidOperationException("No access token in the response.");
+                return null;
+                //throw new InvalidOperationException("No access token in the response.");
             }
 
+            _logger.LogInformation("Access token obtained successfully.");
             return tokenResponse.AccessToken;
         }
     }
