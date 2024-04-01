@@ -8,9 +8,11 @@ namespace StockTracAllDataIntegrator.Pages
         [BindProperty(SupportsGet = true)]
         public string AccessToken { get; set; }
 
+        [BindProperty(SupportsGet = true)]
+        public string CarComponents { get; set; }
+
         public void OnGet()
         {
-            // The access token is now available in the AccessToken property
         }
     }
 }

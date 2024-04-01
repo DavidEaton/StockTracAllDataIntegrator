@@ -1,4 +1,12 @@
 ﻿@page "/tokendisplay/{AccessToken}"
 @model TokenDisplayModel
 
-<p>Access Token: @Model.AccessToken</p>
+<h4>Access Token: </h4>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="w-50">
+            <textarea class="form-control" readonly style="height: 100px;">@Model.AccessToken</textarea>
+        </div>
+    </div>
+</div>

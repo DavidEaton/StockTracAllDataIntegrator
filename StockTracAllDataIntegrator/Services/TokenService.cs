@@ -40,6 +40,8 @@ namespace StockTracAllDataIntegrator.Services
                 }
             };
 
+
+            // Wrap in retry logic: https://docs.microsoft.com/en-us/dotnet/architecture/microservices/implement-resilient-applications/implement-http-call-retries-exponential-backoff-polly
             var response = await _httpClient.SendAsync(requestMessage);
             var responseContent = await response.Content.ReadAsStringAsync();
 
