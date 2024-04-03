@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using StockTracAllDataIntegrator.Models;
 
 namespace StockTracAllDataIntegrator.Pages
 {
@@ -9,7 +10,7 @@ namespace StockTracAllDataIntegrator.Pages
         public string AccessToken { get; set; }
 
         [BindProperty(SupportsGet = true)]
-        public string CarComponents { get; set; }
+        public CarComponentsModel CarComponents { get; set; } = new CarComponentsModel();
 
         public void OnGet()
         {

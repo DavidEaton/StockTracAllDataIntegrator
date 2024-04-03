@@ -35,6 +35,7 @@ namespace StockTracAllDataIntegrator
 
                 // Add services to the container.
                 builder.Services.AddRazorPages();
+                builder.Services.AddHttpClient();
                 builder.Services.AddHttpClient<ITokenService, TokenService>();
                 builder.Services.AddHttpClient<IAllDataApiService, AllDataApiService>();
 
@@ -58,7 +59,7 @@ namespace StockTracAllDataIntegrator
                 app.MapRazorPages();
 
                 // Change the default route
-                app.MapGet("/", () => Results.Redirect("/StartOAuthFlow"));
+                app.MapGet("/", () => Results.Redirect("/LoginModel"));
 
                 app.Run();
             }

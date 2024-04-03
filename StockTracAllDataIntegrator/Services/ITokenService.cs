@@ -2,6 +2,6 @@
 {
     public interface ITokenService
     {
-        Task<string> ExchangeAuthorizationCodeForToken(string authorizationCode, string redirectUri);
+        Task<string> ExchangeAuthorizationCodeForToken(string authorizationCode, string redirectUri, string accessTokenCookie);
     }
 }
