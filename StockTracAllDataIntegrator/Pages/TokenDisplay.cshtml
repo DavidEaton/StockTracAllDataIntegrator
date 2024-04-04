@@ -1,17 +1,15 @@
-﻿@page "/tokendisplay/{AccessToken}"
+﻿@page "/TokenDisplay"
 @model TokenDisplayModel
 
-<h4>Access Token: </h4>
-
-<div class="container-fluid">
+<div class="container my-4">
     <div class="row">
-        <div class="w-50">
-            <textarea class="form-control" readonly style="height: 100px;">@Model.AccessToken</textarea>
+        <div class="col-md-6">
+            <label for="accessToken">Access Token:</label>
+            <pre id="accessToken" class="text-break" style="white-space: normal;">@Model.AccessToken</pre>
         </div>
     </div>
 </div>
 
-<h4>Car Components:</h4>
 
 <h4>Car Components:</h4>
 @if (Model.CarComponents != null && Model.CarComponents.Embedded?.Data?.Components != null)

@@ -7,7 +7,7 @@ namespace StockTracAllDataIntegrator.Pages
     public class TokenDisplayModel : PageModel
     {
         [BindProperty(SupportsGet = true)]
-        public string AccessToken { get; set; }
+        public string? AccessToken { get; set; }
 
         [BindProperty(SupportsGet = true)]
         public CarComponentsModel CarComponents { get; set; } = new CarComponentsModel();

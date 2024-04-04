@@ -25,12 +25,8 @@ namespace StockTracAllDataIntegrator.Pages
             _logger = logger;
         }
 
-        public async Task<IActionResult> OnGetAsync(string code, string state)
+        public async Task<IActionResult> OnGetAsync(string code)
         {
-            _logger.LogInformation("Callback endpoint hit.");
-            _logger.LogInformation("Headers: {@Headers}", Request.Headers);
-            _logger.LogInformation("Cookies: {@Cookies}", Request.Cookies);
-
             if (!string.IsNullOrEmpty(code))
             {
                 try
@@ -38,48 +34,40 @@ namespace StockTracAllDataIntegrator.Pages
                     var redirectUri = configuration["OAuth:RedirectUri"];
                     var accessTokenCookie = Request.Cookies["Access-Token"];
 
-                    if (string.IsNullOrEmpty(accessTokenCookie))
-                    {
-                        // Handle the missing cookie scenario
-                        // This could involve redirecting the user to log in again or showing an error message
-                    }
-                    else
-                    {
-                        AccessToken = await tokenService.ExchangeAuthorizationCodeForToken(code, redirectUri, accessTokenCookie) ?? "No Token Found";
-                        TokenExchangeSuccess = !string.IsNullOrEmpty(AccessToken);
+                    AccessToken = await tokenService.ExchangeAuthorizationCodeForToken(code, redirectUri, accessTokenCookie) ?? "No Token Found";
+                    TokenExchangeSuccess = AccessToken != "No Token Found";
 
-                        if (TokenExchangeSuccess)
+                    if (TokenExchangeSuccess)
+                    {
+                        var carComponents = await _allDataApiService.GetCarComponentsAsync(AccessToken, 57900, 1, true);
+
+                        var options = new JsonSerializerOptions
                         {
-                            // Your existing logic for using the access token
-                            // ...
-                        }
+                            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                            PropertyNameCaseInsensitive = true,
+                        };
+
+                        CarComponents = JsonSerializer.Deserialize<CarComponentsModel>(carComponents, options);
                     }
-
-                    TokenExchangeSuccess = true;
-
-                    // call https://api-beta.alldata.com/ADAG/api/dws/ADConnect/v5/carids/57900/components/1?flatten=true with the access token to get the data
-                    // Implement AllDataApiService to call the API and return the data
-                    var carComponents = await _allDataApiService.GetCarComponentsAsync(AccessToken, 57900, 1, true);
-                    CarComponents = JsonSerializer.Deserialize<CarComponentsModel>(carComponents);
 
                 }
                 catch (Exception ex)
                 {
-                    // Log the exception
+                    _logger.LogError(ex, "Error exchanging authorization code for token.");
                     TokenExchangeSuccess = false;
-                    // Handle the error, possibly return an error page or log the details
+                    // TODO: Handle the error
                 }
             }
             else
             {
-                // Log the error, the code parameter is missing from the query string
+                _logger.LogError("Code parameter is missing from the query string.");
                 TokenExchangeSuccess = false;
-                // Handle the error
+                // TODO: Handle the error
             }
 
             if (TokenExchangeSuccess)
             {
-                return RedirectToPage("/TokenDisplay", new { AccessToken, CarComponents });
+                return RedirectToPage($"/ApiResultsDisplay?accessToken={AccessToken}");
             }
             else
             {

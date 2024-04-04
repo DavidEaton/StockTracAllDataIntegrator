@@ -17,12 +17,18 @@ namespace StockTracAllDataIntegrator.Services
         {
             _logger = logger;
             _cookieContainer = new CookieContainer();
+
             var handler = new HttpClientHandler
             {
                 UseCookies = true,
                 CookieContainer = _cookieContainer
             };
-            _httpClient = new HttpClient(handler) { BaseAddress = httpClient.BaseAddress };
+
+            _httpClient = new HttpClient(handler)
+            {
+                BaseAddress = new Uri(configuration["OAuth:ApiBaseAddress"])
+            };
+
             _clientId = configuration["OAuth:ClientId"];
             _clientSecret = configuration["OAuth:ClientSecret"];
             _obtainTokenEndpoint = configuration["OAuth:ObtainTokenEndpoint"];
@@ -31,10 +37,21 @@ namespace StockTracAllDataIntegrator.Services
         public async Task<string> ExchangeAuthorizationCodeForToken(string authorizationCode, string redirectUri, string accessTokenCookie)
         {
             var clientCredentials = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{_clientId}:{_clientSecret}"));
+            var requestUri = new Uri(_httpClient.BaseAddress, _obtainTokenEndpoint);
 
             if (!string.IsNullOrEmpty(accessTokenCookie))
             {
-                _cookieContainer.Add(new Uri(_httpClient.BaseAddress, _obtainTokenEndpoint), new Cookie("Access-Token", accessTokenCookie));
+                var cookieValue = ExtractTokenValue(accessTokenCookie);
+                var cookie = new Cookie("Access-Token", cookieValue)
+                {
+                    Domain = requestUri.Host,
+                    Secure = requestUri.Scheme == Uri.UriSchemeHttps,
+                    HttpOnly = true,
+                    Path = "/",
+                    Expires = ExtractTokenExpiry(accessTokenCookie)
+                };
+
+                _cookieContainer.Add(requestUri, cookie);
             }
 
             using var requestMessage = new HttpRequestMessage(HttpMethod.Post, _obtainTokenEndpoint)
@@ -73,6 +90,31 @@ namespace StockTracAllDataIntegrator.Services
             }
             return tokenResponse?.AccessToken;
         }
-    }
+        private string ExtractTokenValue(string cookieHeader)
+        {
+            var parts = cookieHeader.Split(';');
+            var valuePart = parts.FirstOrDefault(part => part.StartsWith("Access-Token="));
+            if (valuePart != null)
+            {
+                // Assuming the name and value are separated by an equals sign
+                return valuePart.Split('=')[1];
+            }
+            return string.Empty;
+        }
 
+        private DateTime ExtractTokenExpiry(string cookieHeader)
+        {
+            var parts = cookieHeader.Split(';');
+            var expiryPart = parts.FirstOrDefault(part => part.TrimStart().StartsWith("Expires="));
+            if (expiryPart != null)
+            {
+                var expiryString = expiryPart.Split('=')[1];
+                if (DateTime.TryParse(expiryString, out var expiry))
+                {
+                    return expiry;
+                }
+            }
+            return DateTime.MinValue; // or some default value
+        }
+    }
 }
