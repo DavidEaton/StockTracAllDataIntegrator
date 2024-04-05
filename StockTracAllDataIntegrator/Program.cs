@@ -35,6 +35,9 @@ namespace StockTracAllDataIntegrator
 
                 // Add services to the container.
                 builder.Services.AddRazorPages();
+                builder.Services.AddSession();
+                builder.Services.AddHttpContextAccessor();
+                builder.Services.AddDistributedMemoryCache();
                 builder.Services.AddHttpClient();
                 builder.Services.AddHttpClient<ITokenService, TokenService>();
                 builder.Services.AddHttpClient<IAllDataApiService, AllDataApiService>();
@@ -51,18 +54,13 @@ namespace StockTracAllDataIntegrator
 
                 app.UseHttpsRedirection();
                 app.UseStaticFiles();
-
+                app.UseSession();
                 app.UseRouting();
-
                 app.UseAuthorization();
-
                 app.MapRazorPages();
-
-                var AccessToken = "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJqYW53QHN0b2NrdHJhYy5jb20iLCJ1c2VyX25hbWUiOiJqYW53QHN0b2NrdHJhYy5jb20iLCJpcCI6Ijk3LjExMi41LjE4MCIsImFtciI6ImFsbGRhdGE6b2F1dGg6YXV0aG9yaXphdGlvbl9jb2RlIiwiaXNzIjoiYXBpLWJldGEuYWxsZGF0YS5jb20iLCJ0eXBlIjoiRVhURVJOQUwiLCJjbGllbnRfaWQiOiIyYWM5NDI0MC0wMjg1LTQ1ZDMtOTZjOS1lYzYyZGEzOGFlMDQiLCJjbGllbnRfc2l0ZV9pZCI6MTQyNjkwLCJhY3IiOiJhY20iLCJ0ZW1wX3Bhc3MiOiJmYWxzZSIsInVzZXJfaWQiOjE3NTYyNSwic2NvcGUiOlsicmVhZCJdLCJzaXRlX2lkIjoxNDI2OTAsImV4cCI6MTcxMjI4NzczNSwiaWF0IjoxNzEyMjQ0NTM1LCJqdGkiOiIzMzI2ZWRiMC1lYTU4LTQxMTAtYTkxMS1jMGU1Zjc1YWI1MDkifQ.168ksXHZSsfPM2GOxpNUuNxmt3HOm-HXkVMSYzDDtC9TY8m1gcGvB-6jh85xquxsebqKz6_yRg10sfgR7wKy_A";
 
                 // Change the default route
                 app.MapGet("/", () => Results.Redirect("/Login"));
-                //app.MapGet("/", () => Results.Redirect($"/ApiResultsDisplay?accessToken={AccessToken}"));
 
                 app.Run();
             }

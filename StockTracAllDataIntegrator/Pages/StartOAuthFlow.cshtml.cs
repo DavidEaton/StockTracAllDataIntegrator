@@ -19,8 +19,17 @@ namespace StockTracAllDataIntegrator.Pages
 
         public IActionResult OnGet()
         {
-            var url = $"{authorizationEndpoint}?client_id={clientId}&scope=read&response_type=code&redirect_uri={Uri.EscapeDataString(redirectUri)}";
-            return Redirect(url);
+            // Generate the URL for the ALLDATA authorization endpoint
+            var state = Guid.NewGuid().ToString(); // Generate a unique state value for CSRF protection
+            var scope = "read"; // Specify the scope of access you are requesting
+            var responseType = "code"; // We want an authorization code response
+
+            // Construct the authorization URL
+            var authorizationUrl = $"{authorizationEndpoint}?response_type={responseType}&client_id={clientId}&scope={scope}&redirect_uri={Uri.EscapeDataString(redirectUri)}&state={state}";
+
+            // Redirect the user to the ALLDATA authorization endpoint
+            return Redirect(authorizationUrl);
         }
+
     }
 }

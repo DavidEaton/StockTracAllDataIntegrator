@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using StockTracAllDataIntegrator.Models;
 using StockTracAllDataIntegrator.Services;
-using System.Text.Json;
 
 namespace StockTracAllDataIntegrator.Pages
 {
@@ -13,7 +12,6 @@ namespace StockTracAllDataIntegrator.Pages
         private readonly IAllDataApiService _allDataApiService;
         private readonly ILogger<CallbackModel> _logger;
 
-        public bool TokenExchangeSuccess { get; private set; }
         public string AccessToken { get; set; }
         public CarComponentsModel? CarComponents { get; set; }
 
@@ -27,50 +25,44 @@ namespace StockTracAllDataIntegrator.Pages
 
         public async Task<IActionResult> OnGetAsync(string code)
         {
-            if (!string.IsNullOrEmpty(code))
+            if (string.IsNullOrEmpty(code))
             {
-                try
+                _logger.LogError("Authorization code is missing from the callback.");
+                return RedirectToPage("/Error");
+            }
+
+            try
+            {
+                var redirectUri = configuration["OAuth:RedirectUri"];
+                var accessTokenCookie = Request.Cookies["Access-Token"];
+
+                AccessToken = await tokenService.ExchangeAuthorizationCodeForToken(code, redirectUri, accessTokenCookie) ?? "No Token Found";
+
+                if (AccessToken != "No Token Found")
                 {
-                    var redirectUri = configuration["OAuth:RedirectUri"];
-                    var accessTokenCookie = Request.Cookies["Access-Token"];
+                    var carComponentsJson = await _allDataApiService.GetCarComponentsAsync(AccessToken, 57900, 1, true);
 
-                    AccessToken = await tokenService.ExchangeAuthorizationCodeForToken(code, redirectUri, accessTokenCookie) ?? "No Token Found";
-                    TokenExchangeSuccess = AccessToken != "No Token Found";
-
-                    if (TokenExchangeSuccess)
+                    if (!string.IsNullOrEmpty(carComponentsJson))
                     {
-                        var carComponents = await _allDataApiService.GetCarComponentsAsync(AccessToken, 57900, 1, true);
-
-                        var options = new JsonSerializerOptions
-                        {
-                            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                            PropertyNameCaseInsensitive = true,
-                        };
-
-                        CarComponents = JsonSerializer.Deserialize<CarComponentsModel>(carComponents, options);
+                        TempData["CarComponents"] = carComponentsJson;
+                    }
+                    else
+                    {
+                        _logger.LogError("No car components data was returned from the service.");
+                        return RedirectToPage("/Error");
                     }
 
+                    return RedirectToPage("/ApiResults", new { accessToken = AccessToken });
                 }
-                catch (Exception ex)
+                else
                 {
-                    _logger.LogError(ex, "Error exchanging authorization code for token.");
-                    TokenExchangeSuccess = false;
-                    // TODO: Handle the error
+                    _logger.LogError("No valid access token found.");
+                    return RedirectToPage("/Error");
                 }
             }
-            else
+            catch (Exception ex)
             {
-                _logger.LogError("Code parameter is missing from the query string.");
-                TokenExchangeSuccess = false;
-                // TODO: Handle the error
-            }
-
-            if (TokenExchangeSuccess)
-            {
-                return RedirectToPage($"/ApiResultsDisplay?accessToken={AccessToken}");
-            }
-            else
-            {
+                _logger.LogError(ex, "Error exchanging authorization code for token.");
                 return RedirectToPage("/Error");
             }
         }
